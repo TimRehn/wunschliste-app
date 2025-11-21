@@ -61,35 +61,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 itemElement.classList.add('reserved');
             }
             
-            let statusText = '';
+            let statusTextHtml = '';
+            
+            // Logik zur Anzeige des Reservierungsstatus
             if (isReserved) {
                 // Nur wenn Link-ID vorhanden ist UND die private Spalte von der Function gesendet wurde
                 if (linkId && item.chosen_by_link_id) { 
                     const reservedById = item.chosen_by_link_id;
-                    if (reservedById === linkId) {
-                        statusText = ' (Von DIR reserviert)';
-                    } else {
-                        statusText = ` (Reserviert von: ${reservedById.substring(0, 6)}...)`;
-                    }
+                    
+                    // Korrektur: Neuer Anzeigetext mit CSS-Klasse für die Breite
+                    statusTextHtml = `<span class="reserved-status">Reserviert von: <span class="reserved-by-name">${reservedById}</span></span>`;
                 } else {
                     // Sichtbar für das Geburtstagskind (keine Link-ID-Info)
-                    statusText = ' (Reserviert)'; 
+                    statusTextHtml = '<span class="reserved-status">(Reserviert)</span>'; 
                 }
             }
             
             const btnDisabled = isReserved || !linkId;
             const btnText = isReserved ? 'Reserviert' : 'Reservieren';
 
+            // Korrektur: HTML-Struktur für statusTextHtml angepasst
             itemElement.innerHTML = `
-                <span>${item.geschenk_name} ${statusText}</span>
-                <button class="reserve-btn" data-id="${item.wunsch_id}" ${btnDisabled ? 'disabled' : ''}>
+                <span>${item.geschenk_name} ${statusTextHtml}</span>
+                <button class="reserve-btn" data-id="${item.id}" ${btnDisabled ? 'disabled' : ''}>
                     ${btnText}
                 </button>
             `;
 
             if (!btnDisabled) {
+                // HINWEIS: Hier wurde von wunsch_id auf id korrigiert, falls Ihre Supabase-Tabelle 'id' verwendet.
                 itemElement.querySelector('.reserve-btn').addEventListener('click', () => {
-                    reserveGift(item.wunsch_id, linkId);
+                    reserveGift(item.id, linkId); 
                 });
             }
 
@@ -98,8 +100,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. Reservierung senden ---
-    async function reserveGift(wunsch_id, linkId) {
-        if (!confirm(`Möchtest du "${wunsch_id}" wirklich reservieren?`)) {
+    async function reserveGift(id, linkId) {
+        if (!confirm(`Möchtest du das Geschenk mit der ID "${id}" wirklich reservieren?`)) {
             return;
         }
 
@@ -110,13 +112,13 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-Link-ID': linkId
                 },
-                body: JSON.stringify({ wunsch_id })
+                body: JSON.stringify({ wunsch_id: id }) // Sendet die ID
             });
 
             if (response.status === 409) {
-                 alert('Reservierung fehlgeschlagen: Das Geschenk ist bereits vergeben.');
+                alert('Reservierung fehlgeschlagen: Das Geschenk ist bereits vergeben.');
             } else if (!response.ok) {
-                 throw new Error('Serverfehler beim Reservieren.');
+                throw new Error('Serverfehler beim Reservieren.');
             } else {
                 alert('Geschenk erfolgreich reserviert!');
             }
@@ -130,5 +132,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadWishlist();
-
 });
+
