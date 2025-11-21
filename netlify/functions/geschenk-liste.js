@@ -14,7 +14,7 @@ exports.handler = async (event) => {
 
     try {
         let { data, error } = await supabase
-            .from('wishes')
+            .from('Wishes')
             .select('*') 
             .order('created_at', { ascending: true });
 
@@ -51,4 +51,5 @@ exports.handler = async (event) => {
         console.error('Fehler beim Abrufen der Wunschliste:', error);
         return { statusCode: 500, body: JSON.stringify({ error: 'Fehler beim Datenbankzugriff.' }) };
     }
+
 };
