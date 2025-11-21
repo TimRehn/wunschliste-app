@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-Link-ID': linkId
                 },
-                body: JSON.stringify({ wunsch_id: id }) // Sendet die ID
+                body: JSON.stringify({ id: id }) // Sendet die ID
             });
 
             if (response.status === 409) {
@@ -133,4 +133,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     loadWishlist();
 });
+
 
