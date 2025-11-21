@@ -19,7 +19,7 @@ exports.handler = async (event) => {
 
     try {
         const { error, count } = await supabase
-            .from('wishes')
+            .from('Wishes')
             .update({ 
                 is_chosen: true, 
                 chosen_by_link_id: linkId 
@@ -58,4 +58,5 @@ exports.handler = async (event) => {
         console.error('Allgemeiner Fehler bei Reservierung:', error);
         return { statusCode: 500, body: JSON.stringify({ error: 'Serverfehler.' }) };
     }
+
 };
