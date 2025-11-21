@@ -13,10 +13,17 @@ exports.handler = async (event) => {
     const isGifter = !!linkId && linkId !== 'GUEST';
 
     try {
-        let { data, error } = await supabase
-            .from('Wishes')
-            .select('*') 
-            .order('created_at', { ascending: true });
+       let query = supabase
+    .from('Wishes')
+    .select('*') 
+    .order('created_at', { ascending: true });
+
+// WICHTIG: Die Link-ID des Besuchers (linkId) wird als Filter verwendet
+if (linkId && linkId !== 'GUEST') {
+    query = query.eq('list_owner_id', linkId); // <-- Filterung der Liste
+}
+
+let { data, error } = await query;
 
         if (error) throw error;
 
@@ -53,3 +60,4 @@ exports.handler = async (event) => {
     }
 
 };
+
