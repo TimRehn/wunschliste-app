@@ -10,10 +10,10 @@ exports.handler = async (event) => {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { wunsch_id } = JSON.parse(event.body);
+    const { id } = JSON.parse(event.body);
     const linkId = event.headers['x-link-id']; 
 
-    if (!wunsch_id || !linkId || linkId === 'GUEST') {
+    if (!id || !linkId || linkId === 'GUEST') {
         return { statusCode: 400, body: 'Reservierung nur mit gültiger Link-ID möglich.' };
     }
 
@@ -24,7 +24,7 @@ exports.handler = async (event) => {
                 is_chosen: true, 
                 chosen_by_link_id: linkId 
             })
-            .eq('id', wunsch_id) 
+            .eq('id', id) 
             .select() 
             .limit(1) 
             .maybeSingle(); 
@@ -60,3 +60,4 @@ exports.handler = async (event) => {
     }
 
 };
+
