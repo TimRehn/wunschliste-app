@@ -69,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     if (reservedById === linkId) {
                         statusText = ' (Von DIR reserviert)';
                     } else {
-                        statusText = ` (Reserviert von Link: ${reservedById.substring(0, 6)}...)`;
+                        statusText = ` (Reserviert von: ${reservedById.substring(0, 6)}...)`;
                     }
                 } else {
                     // Sichtbar für das Geburtstagskind (keine Link-ID-Info)
@@ -130,4 +130,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     loadWishlist();
+
 });
