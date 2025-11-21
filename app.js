@@ -21,17 +21,23 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     const actualLinkId = linkId || 'GUEST';
-    linkStatus.textContent = linkId 
-        ? `Dein Link-Status: ${linkId} (Du siehst, wessen Liste du siehst und wer reserviert hat!)` 
+    linkStatus.textContent = linkId
+        ? `Dein Link-Status: ${linkId} (Du siehst, wessen Liste du siehst und wer reserviert hat!)`
         : `Dein Status: Öffentlich (Du siehst eine allgemeine Liste und kannst anonym reservieren.)`;
     
     // NEU: Nur das Erstellungsformular anzeigen, wenn eine Link-ID vorhanden ist (Eigentümer)
-    if (!linkId) {
-        addWishSection.style.display = 'none';
-    } else {
-         // Den Header anpassen, um anzuzeigen, dass der Nutzer die Liste bearbeiten kann
-         addWishSection.querySelector('h2').textContent = `Wunschliste von ${linkId} bearbeiten`;
+    if (addWishSection) {
+        if (!linkId) {
+            addWishSection.style.display = 'none';
+        } else {
+            // Den Header anpassen, um anzuzeigen, dass der Nutzer die Liste bearbeiten kann
+            const header = addWishSection.querySelector('h2');
+            if (header) {
+                header.textContent = `Wunschliste von ${linkId} bearbeiten`;
+            }
+        }
     }
+
 
     // --- 2. Wunschliste abrufen ---
     async function loadWishlist() {
@@ -42,7 +48,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'GET',
                 headers: {
                     // Sende die ID, um die korrekte (gefilterte) Wunschliste zu erhalten
-                    'X-Link-ID': actualLinkId 
+                    'X-Link-ID': actualLinkId
                 }
             });
 
@@ -79,15 +85,18 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Logik zur Anzeige des Reservierungsstatus
             if (isReserved) {
+                // Wenn man mit einem Link da ist (Schenkender), wird angezeigt, wer reserviert hat
                 if (linkId && item.chosen_by_link_id) { 
                     const reservedById = item.chosen_by_link_id;
                     statusTextHtml = `<span class="reserved-status">Reserviert von: <span class="reserved-by-name">${reservedById}</span></span>`;
                 } else {
+                    // Andernfalls (Öffentlich/Eigentümer) wird nur "Reserviert" angezeigt
                     statusTextHtml = '<span class="reserved-status">(Reserviert)</span>'; 
                 }
             }
             
-            const btnDisabled = isReserved || !linkId;
+            // Button ist deaktiviert, wenn es reserviert ist ODER wenn keine Link-ID (GUEST) vorhanden ist.
+            const btnDisabled = isReserved || !actualLinkId || actualLinkId === 'GUEST';
             const btnText = isReserved ? 'Reserviert' : 'Reservieren';
 
             // Verwendet item.wunsch_id wie in geschenk-liste.js definiert
@@ -143,9 +152,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- 5. NEUE Funktion: Wunsch erstellen ---
     async function createGift(name, ownerId) {
         const createBtn = document.getElementById('add-wish-btn');
-        createBtn.disabled = true;
-        addWishMessage.textContent = 'Wird gespeichert...';
-        addWishMessage.style.color = 'inherit';
+        if (createBtn) createBtn.disabled = true;
+        
+        if (addWishMessage) {
+            addWishMessage.textContent = 'Wird gespeichert...';
+            addWishMessage.style.color = 'inherit';
+        }
 
         try {
             const response = await fetch('/.netlify/functions/wunsch-erstellen', {
@@ -159,22 +171,39 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             
             if (!response.ok) {
-                throw new Error('Fehler beim Erstellen des Wunsches.');
+                let errorDetails = 'Unbekannter Fehler.';
+                try {
+                     const errorBody = await response.json();
+                     if (errorBody && errorBody.error) {
+                         errorDetails = errorBody.error;
+                     } else if (response.statusText) {
+                         errorDetails = response.statusText;
+                     }
+                } catch (e) {
+                     // Falsches JSON-Format
+                }
+                throw new Error(`Fehler beim Erstellen des Wunsches: ${errorDetails}`);
             }
 
-            addWishMessage.textContent = 'Wunsch erfolgreich hinzugefügt!';
-            giftNameInput.value = '';
+            if (addWishMessage) {
+                addWishMessage.textContent = 'Wunsch erfolgreich hinzugefügt!';
+            }
+            if (giftNameInput) giftNameInput.value = '';
             loadWishlist(); // Liste neu laden
             
         } catch (error) {
-            addWishMessage.textContent = `Fehler: ${error.message}`;
-            addWishMessage.style.color = 'red';
+            if (addWishMessage) {
+                addWishMessage.textContent = `Fehler: ${error.message}`;
+                addWishMessage.style.color = 'red';
+            }
         } finally {
-            createBtn.disabled = false;
+            if (createBtn) createBtn.disabled = false;
             // Nachricht nach 3 Sekunden ausblenden
             setTimeout(() => {
-                addWishMessage.textContent = '';
-                addWishMessage.style.color = 'inherit';
+                if (addWishMessage) {
+                    addWishMessage.textContent = '';
+                    addWishMessage.style.color = 'inherit';
+                }
             }, 3000);
         }
     }
@@ -187,64 +216,16 @@ document.addEventListener('DOMContentLoaded', () => {
             if (giftName && linkId) {
                 createGift(giftName, linkId);
             } else {
-                addWishMessage.textContent = 'Bitte gib einen Wunschnamen ein.';
-                addWishMessage.style.color = 'orange';
+                if (addWishMessage) {
+                    addWishMessage.textContent = 'Bitte gib einen Wunschnamen ein.';
+                    addWishMessage.style.color = 'orange';
+                }
             }
         });
     }
 
     loadWishlist();
 });
-C. ➕ NEUE DATEI: netlify/functions/wunsch-erstellen.js
-Diese Datei muss neu im Ordner netlify/functions erstellt werden.
-
-JavaScript
-
-const { createClient } = require('@supabase/supabase-js');
-
-exports.handler = async (event) => {
-    if (event.httpMethod !== 'POST') {
-        return { statusCode: 405, body: 'Nur POST-Anfragen erlaubt' };
-    }
-
-    const supabaseUrl = process.env.SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_ANON_KEY;
-    
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { name } = JSON.parse(event.body); // Geschenkname aus dem Body
-    const ownerId = event.headers['x-link-id']; // Listenbesitzer-ID aus dem Header
-
-    // Sicherheitsprüfung
-    if (!name || !ownerId || ownerId === 'GUEST') {
-        return { statusCode: 400, body: 'Name des Geschenks oder gültige Link-ID des Besitzers fehlt.' };
-    }
-
-    try {
-        const { error } = await supabase
-            .from('Wishes')
-            .insert({ 
-                geschenk_name: name,
-                list_owner_id: ownerId, // WICHTIG: Setzt den Besitzer der Liste
-                is_chosen: false,
-                chosen_by_link_id: null
-            });
-
-        if (error) {
-             console.error('Supabase Fehler beim INSERT:', error);
-             throw new Error(`DB Error: ${error.message}`);
-        }
-
-        return {
-            statusCode: 201, // 201 Created
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message: 'Wunsch erfolgreich erstellt.' }),
-        };
-
-    } catch (error) {
-        console.error('Allgemeiner Fehler beim Erstellen des Wunsches:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: `Serverfehler: ${error.message}` }) };
-    }
 
 
 
