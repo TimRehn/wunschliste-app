@@ -1,0 +1,12 @@
+[build]
+  # Wir verwenden keinen komplexen Build-Befehl, da es nur HTML/CSS/JS ist
+  command = "echo 'Netlify Build Complete'"
+  # Definiert das Verzeichnis, in dem die Funktionen liegen
+  functions = "netlify/functions"
+  # Definiert das Veröffentlichungsverzeichnis (Root-Ordner)
+  publish = "."
+
+[dev]
+  # Einstellungen für die lokale Entwicklung mit Netlify CLI
+  functions = "netlify/functions"
+  publish = "."

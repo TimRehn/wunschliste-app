@@ -1,0 +1,49 @@
+body {
+    font-family: sans-serif;
+    margin: 20px;
+    background-color: #f4f4f4;
+    line-height: 1.6;
+}
+
+header {
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #ccc;
+}
+
+.wish-item {
+    background-color: white;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background-color 0.3s;
+}
+
+.reserved {
+    opacity: 0.7;
+    background-color: #f0f0f0; /* Leicht grauer Hintergrund für reservierte */
+}
+
+.reserved .reserve-btn {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.reserve-btn {
+    background-color: #007bff; /* Blau für Aktion */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+}
+
+.reserve-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+}

@@ -1,0 +1,17 @@
+{
+  "name": "wishlist-app",
+  "version": "1.0.0",
+  "description": "Geburtstagswunschliste mit Netlify Functions und Supabase",
+  "main": "app.js",
+  "scripts": {
+    "start": "netlify dev"
+  },
+  "keywords": [
+    "netlify",
+    "supabase",
+    "serverless"
+  ],
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4"
+  }
+}
