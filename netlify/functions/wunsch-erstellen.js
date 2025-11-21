@@ -1,6 +1,10 @@
 const { createClient } = require('@supabase/supabase-js');
 
 exports.handler = async (event) => {
+    
+    // 💡 HIER IST DIE NEUE ZEILE (Punkt A)
+    console.log('>>> [START] wunsch-erstellen Function gestartet. Link-ID im Header:', event.headers['x-link-id']);
+
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Nur POST-Anfragen erlaubt' };
     }
@@ -15,6 +19,10 @@ exports.handler = async (event) => {
     const { name } = JSON.parse(event.body); 
     // Listenbesitzer-ID aus dem Header (wird von app.js gesendet)
     const ownerId = event.headers['x-link-id']; 
+
+    // 💡 HIER IST DIE NEUE ZEILE (Punkt B: Prüft, ob die Daten vom Body lesbar sind)
+    console.log('Wunsch-Daten: ', { name, ownerId });
+
 
     // Sicherheitsprüfung: Nur mit gültigem Link-Namen erlauben
     if (!name || !ownerId || ownerId === 'GUEST') {
@@ -35,6 +43,10 @@ exports.handler = async (event) => {
              console.error('Supabase Fehler beim INSERT:', error);
              throw new Error(`DB Error: ${error.message}`);
         }
+        
+        // 💡 HIER IST DIE NEUE ZEILE (Punkt C: Bestätigt erfolgreichen DB-Eintrag)
+        console.log(`Wunsch "${name}" erfolgreich für OwnerId: ${ownerId} erstellt.`);
+
 
         return {
             statusCode: 201, // 201 Created
