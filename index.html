@@ -9,10 +9,20 @@
 <body>
 
     <header>
-        <h1>🎂 Meine Wunschliste</h1>
+        <h1>🎂 Wunschliste</h1>
         <p>Hallo! Wenn du mich über einen speziellen Link erreicht hast, kannst du hier ein Geschenk reservieren.</p>
         <p id="link-status" style="font-style: italic;"></p>
     </header>
+
+    <section id="add-wish-section" style="margin-bottom: 20px;">
+        <h2>Liste bearbeiten</h2>
+        <p>Erstelle hier einen neuen Wunsch für deine Liste. Deine Link-ID wird als Listenbesitzer gespeichert.</p>
+        <form id="add-wish-form">
+            <input type="text" id="gift-name-input" placeholder="Name des Geschenks (z.B. Buch XY)" required style="padding: 10px; width: calc(100% - 120px); margin-right: 10px; border: 1px solid #ccc; border-radius: 5px;">
+            <button type="submit" id="add-wish-btn" style="padding: 10px 20px; background-color: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">Hinzufügen</button>
+        </form>
+        <p id="add-wish-message" style="margin-top: 10px;"></p>
+    </section>
 
     <main id="wishlist-container">
         <p>Wird geladen...</p>
