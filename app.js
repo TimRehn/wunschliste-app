@@ -80,18 +80,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const btnDisabled = isReserved || !linkId;
             const btnText = isReserved ? 'Reserviert' : 'Reservieren';
 
-            // Korrektur: HTML-Struktur für statusTextHtml angepasst
+            // KORREKTUR 1: Muss item.wunsch_id verwenden, da es von geschenk-liste.js so benannt wird
             itemElement.innerHTML = `
                 <span>${item.geschenk_name} ${statusTextHtml}</span>
-                <button class="reserve-btn" data-id="${item.id}" ${btnDisabled ? 'disabled' : ''}>
+                <button class="reserve-btn" data-id="${item.wunsch_id}" ${btnDisabled ? 'disabled' : ''}>
                     ${btnText}
                 </button>
             `;
 
             if (!btnDisabled) {
-                // HINWEIS: Hier wurde von wunsch_id auf id korrigiert, falls Ihre Supabase-Tabelle 'id' verwendet.
+                // KORREKTUR 2: Muss item.wunsch_id verwenden
                 itemElement.querySelector('.reserve-btn').addEventListener('click', () => {
-                    reserveGift(item.id, linkId); 
+                    reserveGift(item.wunsch_id, linkId); 
                 });
             }
 
@@ -100,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. Reservierung senden ---
+    // HINWEIS: Die Funktion erwartet die ID als 'id', was korrekt ist, da app.js sie als { id: id } sendet
     async function reserveGift(id, linkId) {
         if (!confirm(`Möchtest du das Geschenk mit der ID "${id}" wirklich reservieren?`)) {
             return;
