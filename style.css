@@ -47,3 +47,24 @@ header {
 .reserve-btn:hover:not(:disabled) {
     background-color: #0056b3;
 }
+
+/* NEUE CSS-REGEL FÜR LANGE NAMEN */
+.reserved-by-name {
+    /* Stellt sicher, dass das Element korrekt im Flow sitzt */
+    display: inline-block;
+    /* Verhindert das Umbrechen des Namens auf mehrere Zeilen */
+    white-space: nowrap; 
+    /* Maximale Breite, bevor der Name abgeschnitten wird (kann angepasst werden) */
+    max-width: 150px; 
+    /* Schneidet den Text ab, der über die max-width hinausgeht */
+    overflow: hidden; 
+    /* Zeigt Auslassungspunkte am Ende des abgeschnittenen Namens */
+    text-overflow: ellipsis; 
+}
+
+/* Optionale Stilanpassung, um den Status vom Geschenknamen etwas abzuheben */
+.reserved-status {
+    margin-left: 10px;
+    font-size: 0.9em;
+    color: #888;
+}
