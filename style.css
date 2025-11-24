@@ -19,7 +19,8 @@ header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    /* ✅ Diese Zeile stellt die vertikale Zentrierung sicher */
+    align-items: center; 
     transition: background-color 0.3s;
 }
 
@@ -48,7 +49,25 @@ header {
     background-color: #0056b3;
 }
 
-/* NEUE CSS-REGEL FÜR LANGE NAMEN */
+/* 🆕 NEU: Stil für den Löschen-Button */
+.delete-btn {
+    background-color: #dc3545; /* Rot für Löschen */
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background-color 0.3s;
+    margin-left: 10px; /* Abstand zum Reservieren-Button */
+}
+
+.delete-btn:hover {
+    background-color: #c82333;
+}
+
+
+/* NEUE CSS-REGEL FÜR LANGE NAMEN (wie von Ihnen gewünscht) */
 .reserved-by-name {
     /* Stellt sicher, dass das Element korrekt im Flow sitzt */
     display: inline-block;
@@ -68,3 +87,4 @@ header {
     font-size: 0.9em;
     color: #888;
 }
+
