@@ -25,19 +25,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ? `Dein Link-Status: ${linkId} (Du siehst, wessen Liste du siehst und wer reserviert hat!)`
         : `Dein Status: Öffentlich (Du siehst eine allgemeine Liste und kannst anonym reservieren.)`;
     
-    // NEU: Nur das Erstellungsformular anzeigen, wenn eine Link-ID vorhanden ist (Eigentümer)
+    // Nur das Erstellungsformular anzeigen, wenn eine Link-ID vorhanden ist (Eigentümer)
     if (addWishSection) {
-        if (!linkId) {
-            addWishSection.style.display = 'none';
-        } else {
-            // Den Header anpassen, um anzuzeigen, dass der Nutzer die Liste bearbeiten kann
-            const header = addWishSection.querySelector('h2');
-            if (header) {
-                header.textContent = `Wunschliste von ${linkId} bearbeiten`;
-            }
-        }
+        addWishSection.style.display = linkId ? 'block' : 'none';
     }
-
 
     // --- 2. Wunschliste abrufen ---
     async function loadWishlist() {
@@ -47,79 +38,110 @@ document.addEventListener('DOMContentLoaded', () => {
             const response = await fetch('/.netlify/functions/geschenk-liste', {
                 method: 'GET',
                 headers: {
-                    // Sende die ID, um die korrekte (gefilterte) Wunschliste zu erhalten
-                    'X-Link-ID': actualLinkId
+                    'X-Link-ID': actualLinkId 
                 }
             });
 
             if (!response.ok) {
-                throw new Error('Fehler beim Abrufen der Daten vom Server.');
+                throw new Error('Fehler beim Abrufen der Wunschliste.');
             }
 
-            const wishlist = await response.json();
-            renderWishlist(wishlist);
+            const wishes = await response.json();
+            renderWishlist(wishes);
+
         } catch (error) {
-            wishlistContainer.innerHTML = `<p style="color: red;">Fehler: ${error.message}. Bitte überprüfe die Netlify Functions und Supabase.</p>`;
+            wishlistContainer.innerHTML = `<p style="color: red;">Fehler beim Laden der Liste: ${error.message}</p>`;
         }
     }
 
-    // --- 3. Wunschliste rendern ---
-    function renderWishlist(wishlist) {
-        wishlistContainer.innerHTML = ''; 
 
-        if (wishlist.length === 0) {
-            const ownerText = linkId ? `für ${linkId}` : '';
-            wishlistContainer.innerHTML = `<p>Diese Wunschliste ${ownerText} ist leer. Füge Wünsche hinzu!</p>`;
+    // --- 3. Wunschliste rendern (mit Löschen-Button) ---
+    function renderWishlist(wishes) {
+        wishlistContainer.innerHTML = ''; // Container leeren
+        if (wishes.length === 0) {
+            wishlistContainer.innerHTML = '<p>Noch keine Wünsche auf der Liste.</p>';
             return;
         }
 
-        wishlist.forEach(item => {
-            const isReserved = item.is_chosen;
+        wishes.forEach(item => {
             const itemElement = document.createElement('div');
-            itemElement.classList.add('wish-item');
-            if (isReserved) {
-                itemElement.classList.add('reserved');
-            }
+            itemElement.className = item.is_chosen ? 'wish-item reserved' : 'wish-item';
             
-            let statusTextHtml = '';
-            
-            // Logik zur Anzeige des Reservierungsstatus
-            if (isReserved) {
-                // Wenn man mit einem Link da ist (Schenkender), wird angezeigt, wer reserviert hat
-                if (linkId && item.chosen_by_link_id) { 
-                    const reservedById = item.chosen_by_link_id;
-                    statusTextHtml = `<span class="reserved-status">Reserviert von: <span class="reserved-by-name">${reservedById}</span></span>`;
+            // Name des Geschenks (links)
+            const wishName = document.createElement('strong');
+            wishName.textContent = item.geschenk_name;
+            itemElement.appendChild(wishName);
+
+            // Container für Buttons und Status (rechts)
+            const rightSide = document.createElement('div');
+            rightSide.style.display = 'flex';
+            rightSide.style.alignItems = 'center';
+
+            if (item.is_chosen) {
+                // Anzeige für reservierte Wünsche
+                const reservedStatus = document.createElement('span');
+                reservedStatus.className = 'reserved-status';
+                
+                // Nur der Besitzer des Links (nicht GUEST) sieht den Namen
+                if (linkId) {
+                    const reservedByName = document.createElement('span'); 
+                    reservedByName.className = 'reserved-by-name'; 
+                    reservedByName.textContent = `Reserviert von: ${item.chosen_by_link_id || 'Unbekannt'}`;
+                    reservedStatus.appendChild(reservedByName);
+
                 } else {
-                    // Andernfalls (Öffentlich/Eigentümer) wird nur "Reserviert" angezeigt
-                    statusTextHtml = '<span class="reserved-status">(Reserviert)</span>'; 
+                    reservedStatus.textContent = 'Reserviert!';
                 }
-            }
-            
-            // Button ist deaktiviert, wenn es reserviert ist ODER wenn keine Link-ID (GUEST) vorhanden ist.
-            const btnDisabled = isReserved || !actualLinkId || actualLinkId === 'GUEST';
-            const btnText = isReserved ? 'Reserviert' : 'Reservieren';
+                rightSide.appendChild(reservedStatus);
+                
+                // Freigeben-Button für den Besitzer
+                if (linkId) {
+                     const unreserveBtn = document.createElement('button');
+                     unreserveBtn.textContent = 'Freigeben';
+                     unreserveBtn.className = 'reserve-btn';
+                     unreserveBtn.style.backgroundColor = '#ffc107'; // Gelb für Freigeben
+                     unreserveBtn.style.marginLeft = '10px';
+                     unreserveBtn.addEventListener('click', () => {
+                         // unreserveGift(item.wunsch_id, linkId); // Funktion müsste neu implementiert werden
+                         alert('Die Funktion "Freigeben" muss noch implementiert werden.');
+                     });
+                     rightSide.appendChild(unreserveBtn);
+                }
 
-            // Verwendet item.wunsch_id wie in geschenk-liste.js definiert
-            itemElement.innerHTML = `
-                <span>${item.geschenk_name} ${statusTextHtml}</span>
-                <button class="reserve-btn" data-id="${item.wunsch_id}" ${btnDisabled ? 'disabled' : ''}>
-                    ${btnText}
-                </button>
-            `;
-
-            if (!btnDisabled) {
-                itemElement.querySelector('.reserve-btn').addEventListener('click', () => {
+            } else {
+                // Button für nicht reservierte Wünsche
+                const reserveBtn = document.createElement('button');
+                reserveBtn.textContent = 'Reservieren';
+                reserveBtn.className = 'reserve-btn';
+                reserveBtn.setAttribute('data-id', item.wunsch_id);
+                
+                reserveBtn.addEventListener('click', () => {
                     reserveGift(item.wunsch_id, actualLinkId); 
                 });
+                rightSide.appendChild(reserveBtn);
             }
+            
+            // 🆕 NEU: Löschen-Button NUR für den Listenbesitzer hinzufügen
+            if (linkId) {
+                const deleteBtn = document.createElement('button');
+                deleteBtn.textContent = 'Löschen';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.setAttribute('data-id', item.wunsch_id);
 
+                deleteBtn.addEventListener('click', () => {
+                    deleteGift(item.wunsch_id, linkId);
+                });
+                rightSide.appendChild(deleteBtn);
+            }
+            
+            itemElement.appendChild(rightSide);
             wishlistContainer.appendChild(itemElement);
         });
     }
 
     // --- 4. Reservierung senden ---
     async function reserveGift(id, linkId) {
-        if (!confirm(`Möchtest du das Geschenk mit der ID "${id}" wirklich reservieren?`)) {
+        if (!confirm('Möchtest du das Geschenk wirklich reservieren?')) {
             return;
         }
 
@@ -130,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     'Content-Type': 'application/json',
                     'X-Link-ID': linkId
                 },
-                body: JSON.stringify({ id: id }) // Sendet die Geschenk-ID
+                body: JSON.stringify({ id: id })
             });
 
             if (response.status === 409) {
@@ -149,40 +171,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 5. NEUE Funktion: Wunsch erstellen ---
-    async function createGift(name, ownerId) {
-        const createBtn = document.getElementById('add-wish-btn');
-        if (createBtn) createBtn.disabled = true;
-        
-        if (addWishMessage) {
-            addWishMessage.textContent = 'Wird gespeichert...';
-            addWishMessage.style.color = 'inherit';
+    // --- 5. NEU: Wunsch löschen ---
+    async function deleteGift(id, linkId) {
+        if (!confirm('Bist du sicher, dass du diesen Wunsch LÖSCHEN möchtest? Dies kann nicht rückgängig gemacht werden.')) {
+            return;
         }
 
+        try {
+            const response = await fetch('/.netlify/functions/wunsch-loeschen', {
+                method: 'POST', 
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Link-ID': linkId
+                },
+                body: JSON.stringify({ id: id })
+            });
+
+            if (response.status === 403) {
+                alert('Löschen fehlgeschlagen: Du bist nicht der Besitzer dieses Wunsches.');
+            } else if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Löschen fehlgeschlagen.');
+            } else {
+                alert('Wunsch erfolgreich gelöscht!');
+            }
+
+            loadWishlist(); // Liste neu laden
+
+        } catch (error) {
+            alert(`Ein Fehler ist aufgetreten: ${error.message}`);
+            loadWishlist();
+        }
+    }
+
+    // --- 6. Wunsch erstellen ---
+    const createBtn = document.getElementById('add-wish-btn');
+    async function createGift(name, linkId) {
+        if (createBtn) createBtn.disabled = true;
+        if (addWishMessage) addWishMessage.textContent = 'Füge Wunsch hinzu...';
+        
         try {
             const response = await fetch('/.netlify/functions/wunsch-erstellen', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    // Die Link-ID des Besuchers ist der EIGENTÜMER der neuen Liste
-                    'X-Link-ID': ownerId 
+                    'X-Link-ID': linkId
                 },
                 body: JSON.stringify({ name: name })
             });
-            
+
             if (!response.ok) {
-                let errorDetails = 'Unbekannter Fehler.';
-                try {
-                     const errorBody = await response.json();
-                     if (errorBody && errorBody.error) {
-                         errorDetails = errorBody.error;
-                     } else if (response.statusText) {
-                         errorDetails = response.statusText;
-                     }
-                } catch (e) {
-                     // Falsches JSON-Format
-                }
-                throw new Error(`Fehler beim Erstellen des Wunsches: ${errorDetails}`);
+                const errorDetails = await response.text();
+                throw new Error(`Serverfehler beim Erstellen des Wunsches: ${errorDetails}`);
             }
 
             if (addWishMessage) {
@@ -208,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // --- 6. NEU: Formular-Listener ---
+    // --- 7. Formular-Listener ---
     if (addWishForm) {
         addWishForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -224,6 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+
+    // Initialer Ladevorgang
     loadWishlist();
 });
 
