@@ -19,8 +19,7 @@ header {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     justify-content: space-between;
-    /* ✅ Diese Zeile stellt die vertikale Zentrierung sicher */
-    align-items: center; 
+    align-items: center;
     transition: background-color 0.3s;
 }
 
@@ -49,7 +48,6 @@ header {
     background-color: #0056b3;
 }
 
-/* 🆕 NEU: Stil für den Löschen-Button */
 .delete-btn {
     background-color: #dc3545; /* Rot für Löschen */
     color: white;
@@ -66,19 +64,15 @@ header {
     background-color: #c82333;
 }
 
-
-/* NEUE CSS-REGEL FÜR LANGE NAMEN (wie von Ihnen gewünscht) */
+/* KORRIGIERTE CSS-REGEL FÜR LANGE NAMEN */
 .reserved-by-name {
     /* Stellt sicher, dass das Element korrekt im Flow sitzt */
     display: inline-block;
-    /* Verhindert das Umbrechen des Namens auf mehrere Zeilen */
+    /* Verhindert das Umbrechen des Namens, damit er in einer Zeile bleibt */
     white-space: nowrap; 
-    /* Maximale Breite, bevor der Name abgeschnitten wird (kann angepasst werden) */
-    max-width: 150px; 
-    /* Schneidet den Text ab, der über die max-width hinausgeht */
-    overflow: hidden; 
-    /* Zeigt Auslassungspunkte am Ende des abgeschnittenen Namens */
-    text-overflow: ellipsis; 
+    /* ENTFERNT: max-width, overflow: hidden und text-overflow: ellipsis */
+    /* Fügt stattdessen einen Abstand zum nächsten Element hinzu, falls notwendig */
+    padding-right: 15px; 
 }
 
 /* Optionale Stilanpassung, um den Status vom Geschenknamen etwas abzuheben */
